@@ -1,0 +1,32 @@
+# -*- coding: utf-8 -*-
+# vim: ft=jinja
+
+{## Start imports as  ##}
+{% import_yaml 'nessus/defaults/defaults.yaml' as defaults %}
+{% import_yaml 'nessus/defaults/osfamily.yaml' as osfamily %}
+{% import_yaml 'nessus/defaults/os.yaml' as os %}
+{% import_yaml 'nessus/defaults/osfinger.yaml' as osfinger %}
+
+{% set osfamily_filtered = salt['grains.filter_by'](osfamily, grain = 'os_family') %}
+{% set os_filtered = salt['grains.filter_by'](os, grain = 'os') %}
+{% set osfinger_filtered = salt['grains.filter_by'](osfinger, grain = 'osfinger') %}
+
+{% if defaults.agent is defined %}
+{% set agent_data = defaults.agent %}
+{% else %}
+{% set agent_data = {} %}
+{% endif %}
+
+{% if osfamily_filtered.agent is defined %}
+{% set agent_data = salt['slsutil.merge'](agent_data, osfamily_filtered.agent) %}
+{% endif %}
+
+{% if os_filtered.agent is defined %}
+{% set agent_data = salt['slsutil.merge'](agent_data, os_filtered.agent) %}
+{% endif %}
+
+{% if osfinger_filtered.agent is defined %}
+{% set agent_data = salt['slsutil.merge'](agent_data, osfinger_filtered.agent) %}
+{% endif %}
+
+{% set agent_data = salt['slsutil.merge'](agent_data, salt['pillar.get']('nessus:agent', default = {})) %}
